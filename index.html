@@ -10,22 +10,39 @@
     <title>Document</title>
 </head>
 <body>
-    <div class="game">
-        <div class="game-info">
-            Ход: <span class="symbol symbol--x">X</span>
-        </div>
-        <div class="game-field">
-            <button class="cell cell--win"><span class="symbol symbol--x">X</span></button>
-            <button class="cell"><span class="symbol symbol--o">O</span></button>
-            <button class="cell"></button>
-            <button class="cell cell--win"><span class="symbol symbol--x">X</span></button>
-            <button class="cell"></button>
-            <button class="cell"><span class="symbol symbol--o">O</span></button>
-            <button class="cell cell--win"><span class="symbol symbol--x">X</span></button>
-            <button class="cell"><span class="symbol symbol--o">O</span></button>
-            <button class="cell"></button>
-        </div>
-    </div>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const SYMBOL_X = 'X';
+      const SYMBOL_O = 'O';
+
+      function App(){
+        const cells = [null, null, null, SYMBOL_O, SYMBOL_X, SYMBOL_O, null, null, null]
+        const currentStep = SYMBOL_X;
+        const getSymbolClassName = (symbol) => {
+          if(symbol === SYMBOL_O) return "symbol--o"
+          if(symbol === SYMBOL_X) return "symbol--x"
+          return ''
+        }
+
+          return (
+                  <div className="game">
+                      <div className="game-info">
+                          Ход: <span className={`symbol ${getSymbolClassName(currentStep)}`}>{currentStep}</span>
+                      </div>
+                      <div className="game-field">
+                        {cells.map(symbol => {
+                          return <button className="cell">{
+                            symbol ? <span className={`symbol ${getSymbolClassName(symbol)}`}>{symbol}</span> : null
+                          }</button>
+                        })}
+                      </div>
+                  </div>
+          )
+      }
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App/>)
+    </script>
     <style>
     html {
       font-family: Arial, Helvetica, sans-serif;
