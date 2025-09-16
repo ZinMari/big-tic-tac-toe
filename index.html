@@ -17,23 +17,28 @@
       const SYMBOL_O = 'O';
 
       function App(){
-        const cells = [null, null, null, SYMBOL_O, SYMBOL_X, SYMBOL_O, null, null, null]
+        const cells = [SYMBOL_O, null, null, SYMBOL_O, SYMBOL_X, SYMBOL_O, null, null, null]
+
         const currentStep = SYMBOL_X;
+
         const getSymbolClassName = (symbol) => {
           if(symbol === SYMBOL_O) return "symbol--o"
           if(symbol === SYMBOL_X) return "symbol--x"
           return ''
         }
 
+        // функции которые возвращают jsx но не являются компонентом обычно называют render
+        const  =(symbol) => <span className={`symbol ${getSymbolClassName(symbol)}`}>{symbol}</span>
+
           return (
                   <div className="game">
                       <div className="game-info">
-                          Ход: <span className={`symbol ${getSymbolClassName(currentStep)}`}>{currentStep}</span>
-                      </div>
+                          Ход: {renderSymbol(currentStep)}
+                 renderSymbol     </div>
                       <div className="game-field">
-                        {cells.map(symbol => {
-                          return <button className="cell">{
-                            symbol ? <span className={`symbol ${getSymbolClassName(symbol)}`}>{symbol}</span> : null
+                        {cells.map((symbol, id) => {
+                          return <button key={id} className="cell">{
+                            symbol ? renderSymbol(symbol) : null
                           }</button>
                         })}
                       </div>
