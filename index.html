@@ -55,6 +55,8 @@
         // функции которые возвращают jsx но не являются компонентом обычно называют render
         const renderSymbol =(symbol) => <span className={`symbol ${getSymbolClassName(symbol)}`}>{symbol}</span>
 
+        const winnerSymbol = winnerSequence ? cells[winnerSequence[0]] : undefined;
+
         const handleCellClick = (index) => {
           if(cells[index]) {
             return;
@@ -73,7 +75,7 @@
           return (
                   <div className="game">
                       <div className="game-info">
-                          Ход: {renderSymbol(currentStep)}
+                          {winnerSequence ? 'Победитель: ' : 'Ход: '} {renderSymbol(winnerSymbol ?? currentStep)}
                       </div>
                       <div className="game-field">
                         {cells.map((symbol, index) => {
