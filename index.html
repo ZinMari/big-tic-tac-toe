@@ -45,7 +45,7 @@
         const [cells, setCells] = React.useState([null, null, null, null, null, null, null, null, null]);
         const [currentStep, setCurrentStep] = React.useState(SYMBOL_O);
         const [winnerSequence, setWinnerSequence] = React.useState();
-        
+
         const getSymbolClassName = (symbol) => {
           if(symbol === SYMBOL_O) return "symbol--o"
           if(symbol === SYMBOL_X) return "symbol--x"
@@ -72,6 +72,11 @@
           setWinnerSequence(winner)
         };
 
+        const handleResetClick = () => {
+          setCells([null, null, null, null, null, null, null, null, null]);
+          setCurrentStep(SYMBOL_O);
+        }
+
           return (
                   <div className="game">
                       <div className="game-info">
@@ -90,6 +95,7 @@
                           </button>
                         })}
                       </div>
+                      <button onClick={handleResetClick}>СБРОСИТЬ</button>
                   </div>
           )
       }
@@ -120,6 +126,7 @@
       grid-template-columns: repeat(3, 30px);
       grid-template-rows: repeat(3, 30px);
       padding: 1px 0 0 1px;
+      margin-bottom: 20px;
     }
 
     .cell {
