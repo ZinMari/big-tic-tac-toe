@@ -72,24 +72,31 @@
 
       return (
               <div className="game">
-                  <GameInfo isDraw={isDraw} winnerSequence={winnerSequence} currentStep={currentStep}/>
+                  <GameInfo isDraw={isDraw} winnerSymbol={winnerSymbol} currentStep={currentStep}/>
                   <div className="game-field">
-                    {cells.map((symbol, index) => {
-                      const isWinner = winnerSequence?.includes(index);
-                    })}
+                    {cells.map((symbol, index) => ( 
+                      <GameCell 
+                      isWinner={winnerSequence?.includes(index)} 
+                      onClick={()=>{handleCellClick(index)}} 
+                      symbol={symbol}
+                      />
+                    ))}
                   </div>
                   <button onClick={handleResetClick}>СБРОСИТЬ</button>
               </div>
       )
   }
         
-      function GameInfo({isDraw, winnerSequence, currentStep}){
-        return <div 
-                className="game-info"
-                >
-                  {isDraw ? 'Ничья' : winnerSequence ? 'Победитель: ' : 'Ход: '}
-                  {!isDraw && <GameSymbol symbol={renderSymbol(winnerSymbol ?? currentStep)}/> }
-              </div>
+      function GameInfo({isDraw, winnerSymbol, currentStep}){
+        if(isDraw) {
+          return <div className="game-info">Ничья</div>
+        }
+
+        if(winnerSymbol) {
+          return <div className="game-info">Победитель: <GameSymbol symbol={winnerSymbol}/></div>
+        }
+
+        return <div className="game-info">Ход: <GameSymbol symbol={currentStep}/></div>
       }
 
       function GameCell({isWinner, onClick, symbol}){
@@ -97,7 +104,7 @@
                     className={`cell ${isWinner ? 'cell--win' : ''}` }
                     onClick={onClick}
                   >
-                    {symbol ? <GameSymbol symbol={renderSymbol(symbol)}/> : null}
+                    {symbol ? <GameSymbol symbol={GameSymbol(symbol)}/> : null}
                   </button>
       }
 
