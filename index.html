@@ -46,15 +46,6 @@
         const [currentStep, setCurrentStep] = React.useState(SYMBOL_O);
         const [winnerSequence, setWinnerSequence] = React.useState();
 
-        const getSymbolClassName = (symbol) => {
-          if(symbol === SYMBOL_O) return "symbol--o"
-          if(symbol === SYMBOL_X) return "symbol--x"
-          return ''
-        }
-
-        // функции которые возвращают jsx но не являются компонентом обычно называют render
-        const renderSymbol =(symbol) => <span className={`symbol ${getSymbolClassName(symbol)}`}>{symbol}</span>
-
         const winnerSymbol = winnerSequence ? cells[winnerSequence[0]] : undefined;
         const isDraw = !winnerSequence && cells.filter(value => value).length === 9;
 
@@ -91,14 +82,13 @@
               </div>
       )
   }
-      
-      
+        
       function GameInfo({isDraw, winnerSequence, currentStep}){
         return <div 
                 className="game-info"
                 >
                   {isDraw ? 'Ничья' : winnerSequence ? 'Победитель: ' : 'Ход: '}
-                  {!isDraw && renderSymbol(winnerSymbol ?? currentStep)}
+                  {!isDraw && <GameSymbol symbol={renderSymbol(winnerSymbol ?? currentStep)}/> }
               </div>
       }
 
@@ -107,8 +97,18 @@
                     className={`cell ${isWinner ? 'cell--win' : ''}` }
                     onClick={onClick}
                   >
-                    {symbol ? renderSymbol(symbol) : null}
+                    {symbol ? <GameSymbol symbol={renderSymbol(symbol)}/> : null}
                   </button>
+      }
+
+      function GameSymbol({symbol}){
+        const getSymbolClassName = (symbol) => {
+          if(symbol === SYMBOL_O) return "symbol--o"
+          if(symbol === SYMBOL_X) return "symbol--x"
+          return ''
+        }
+        
+        return <span className={`symbol ${getSymbolClassName(symbol)}`}>{symbol}</span>
       }
       
       const root = ReactDOM.createRoot(document.getElementById("root"));
