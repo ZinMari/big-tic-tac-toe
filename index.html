@@ -85,14 +85,6 @@
                   <div className="game-field">
                     {cells.map((symbol, index) => {
                       const isWinner = winnerSequence?.includes(index);
-
-                      return <button 
-                        key={index} 
-                        className={`cell ${isWinner ? 'cell--win' : ''}` }
-                        onClick={()=>handleCellClick(index)}
-                        >
-                        {symbol ? renderSymbol(symbol) : null}
-                      </button>
                     })}
                   </div>
                   <button onClick={handleResetClick}>СБРОСИТЬ</button>
@@ -108,6 +100,15 @@
                   {isDraw ? 'Ничья' : winnerSequence ? 'Победитель: ' : 'Ход: '}
                   {!isDraw && renderSymbol(winnerSymbol ?? currentStep)}
               </div>
+      }
+
+      function GameCell({isWinner, onClick, symbol}){
+          return <button 
+                    className={`cell ${isWinner ? 'cell--win' : ''}` }
+                    onClick={onClick}
+                  >
+                    {symbol ? renderSymbol(symbol) : null}
+                  </button>
       }
       
       const root = ReactDOM.createRoot(document.getElementById("root"));
