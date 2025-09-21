@@ -73,8 +73,9 @@
         };
 
         const handleResetClick = () => {
-          setCells([null, null, null, null, null, null, null, null, null]);
+          setCells(Array.from({length: 9}, ()=>null));
           setCurrentStep(SYMBOL_O);
+          setWinnerSequence(undefined);
         }
 
           return (
