@@ -1,127 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <title>Document</title>
+  <!-- Don't use this in production: -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <title>Document</title>
 </head>
+
 <body>
-    <div id="root"></div>
+  <div id="root"></div>
+  <script type="text/babel">
 
-    <script type="text/babel">
-      const SYMBOL_X = 'X';
-      const SYMBOL_O = 'O';
+    const SYMBOL_X = 'X';
+    const SYMBOL_O = 'O';
 
-      const computeWinner = (cells) => {
-        const lines = [
-          [0, 1, 2],
-          [3, 4, 5],
-          [6, 7, 8],
-          [0, 3, 6],
-          [1, 4, 7],
-          [2, 5, 8],
-          [0, 4, 8],
-          [2, 4, 6]
-        ];
+    const computeWinner = (cells) => {
+      const lines = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
+      ];
 
-        for (let i = 0; i < lines.length; i++) {
-          const [a, b, c] = lines[i];
-          if (
-            cells[a] &&
-            cells[a] === cells[b] &&
-            cells[a] === cells[c]
-          ) {
-            return [a, b, c]
-          }
+      for (let i = 0; i < lines.length; i++) {
+        const [a, b, c] = lines[i];
+        if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
+          return [a, b, c];
         }
-    }
+      }
+      return null;
+    };
 
-      function App(){
+    const getSymbolClassName = (symbol) => {
+      if (symbol === SYMBOL_O) return 'symbol--o';
+      if (symbol === SYMBOL_X) return 'symbol--x';
+      return '';
+    };
 
-        const [cells, setCells] = React.useState([null, null, null, null, null, null, null, null, null]);
-        const [currentStep, setCurrentStep] = React.useState(SYMBOL_O);
-        const [winnerSequence, setWinnerSequence] = React.useState();
+    const renderSymbol = (symbol) => (
+      <span className={`symbol ${getSymbolClassName(symbol)}`}>{symbol}</span>
+    );
 
-        const winnerSymbol = winnerSequence ? cells[winnerSequence[0]] : undefined;
-        const isDraw = !winnerSequence && cells.filter(value => value).length === 9;
+    function App() {
+      const [cells, setCells] = React.useState(Array(9).fill(null));
+      const [currentStep, setCurrentStep] = React.useState(SYMBOL_O);
 
-        const handleCellClick = (index) => {
-          if(cells[index] || winnerSequence) {
-            return;
-          }
+      const winnerSequence = React.useMemo(() => computeWinner(cells), [cells]);
+      const winnerSymbol = winnerSequence ? cells[winnerSequence[0]] : undefined;
+      const isDraw = !winnerSequence && cells.every(Boolean);
 
-          const cellsCopy = cells.slice();
-          cellsCopy[index] = currentStep;
+      const mergeClassNames = (...classes) => classes.filter(Boolean).join(' ');
 
-          const winner = computeWinner(cellsCopy);
+      const cellClassName = (index) => {
+        const isWinner = winnerSequence?.includes(index);
+        return mergeClassNames('cell', isWinner && 'cell--win');
+      };
 
-          setCells(cellsCopy);
-          setCurrentStep(currentStep === SYMBOL_O ? SYMBOL_X : SYMBOL_O)
-          setWinnerSequence(winner)
-        };
+      const handleCellClick = (index) => {
+        if (cells[index] || winnerSequence || isDraw) return;
 
-        const handleResetClick = () => {
-          setCells(Array.from({length: 9}, ()=>null));
-          setCurrentStep(SYMBOL_O);
-          setWinnerSequence(undefined);
+        setCells((prev) => {
+          const next = [...prev];
+          next[index] = currentStep;
+          return next;
+        });
+        setCurrentStep(prev => (prev === SYMBOL_O ? SYMBOL_X : SYMBOL_O));
+      };
+
+      const handleResetGame = () => {
+        setCells(Array(9).fill(null));
+        setCurrentStep(SYMBOL_O);
+      };
+
+      const renderStatus = () => {
+        if (winnerSequence) {
+          return <span>Победитель: {renderSymbol(winnerSymbol)}</span>;
+        } else if (isDraw) {
+          return <span className="draw">Ничья</span>;
+        } else {
+          return <span>Ход: {renderSymbol(currentStep)}</span>;
         }
+      };
 
       return (
-              <div className="game">
-                  <GameInfo isDraw={isDraw} winnerSymbol={winnerSymbol} currentStep={currentStep}/>
-                  <div className="game-field">
-                    {cells.map((symbol, index) => ( 
-                      <GameCell 
-                      isWinner={winnerSequence?.includes(index)} 
-                      onClick={()=>{handleCellClick(index)}} 
-                      symbol={symbol}
-                      />
-                    ))}
-                  </div>
-                  <button onClick={handleResetClick}>СБРОСИТЬ</button>
-              </div>
-      )
-  }
-        
-      function GameInfo({isDraw, winnerSymbol, currentStep}){
-        if(isDraw) {
-          return <div className="game-info">Ничья</div>
-        }
+        <div className="game">
+          <div className="game-info">
+            {renderStatus()}
+          </div>
+          <div className="game-field">
+            {cells.map((symbol, index) => {
+              const isWinner = winnerSequence?.includes(index);
+              return (
+                <button
+                  key={index}
+                  className={cellClassName(index)}
+                  disabled={!!symbol || !!winnerSequence || isDraw}
+                  onClick={() => handleCellClick(index)}
+                >
+                  {symbol ? renderSymbol(symbol) : null}
+                </button>
+              );
+            })}
+          </div>
+          <div className="game-reset">
+            <button onClick={handleResetGame}>
+              Сбросить
+            </button>
+          </div>
+        </div>
+      );
+    }
 
-        if(winnerSymbol) {
-          return <div className="game-info">Победитель: <GameSymbol symbol={winnerSymbol}/></div>
-        }
-
-        return <div className="game-info">Ход: <GameSymbol symbol={currentStep}/></div>
-      }
-
-      function GameCell({isWinner, onClick, symbol}){
-          return <button 
-                    className={`cell ${isWinner ? 'cell--win' : ''}` }
-                    onClick={onClick}
-                  >
-                    {symbol ? <GameSymbol symbol={GameSymbol(symbol)}/> : null}
-                  </button>
-      }
-
-      function GameSymbol({symbol}){
-        const getSymbolClassName = (symbol) => {
-          if(symbol === SYMBOL_O) return "symbol--o"
-          if(symbol === SYMBOL_X) return "symbol--x"
-          return ''
-        }
-        
-        return <span className={`symbol ${getSymbolClassName(symbol)}`}>{symbol}</span>
-      }
-      
-      const root = ReactDOM.createRoot(document.getElementById("root"));
-      root.render(<App/>)
-    </script>
-    <style>
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+  <style>
     html {
       font-family: Arial, Helvetica, sans-serif;
     }
@@ -140,12 +143,30 @@
       margin-bottom: 10px;
     }
 
+    .game-reset {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .game-reset button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      padding: .25rem 1rem;
+      border-radius: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 14px;
+      color: #333;
+    }
+
     .game-field {
       display: grid;
       grid-template-columns: repeat(3, 30px);
       grid-template-rows: repeat(3, 30px);
       padding: 1px 0 0 1px;
-      margin-bottom: 20px;
     }
 
     .cell {
@@ -173,6 +194,11 @@
     .symbol--o {
       color: green;
     }
+
+    .draw {
+      line-height: 24px;
+    }
   </style>
 </body>
+
 </html>
