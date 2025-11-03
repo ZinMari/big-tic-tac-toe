@@ -1,204 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <title>Document</title>
+  </head>
 
-  <!-- Don't use this in production: -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <title>Document</title>
-</head>
+  <body>
+    <div id="root"></div>
 
-<body>
-  <div id="root"></div>
-  <script type="text/babel">
+    <script type="text/babel">
+      const SYMBOL_X = "X";
+      const SYMBOL_O = "O";
 
-    const SYMBOL_X = 'X';
-    const SYMBOL_O = 'O';
+      // Вынос универсального хелпера — как аналог classnames/clsx
+      const mergeClassNames = (...classes) => classes.filter(Boolean).join(" ");
 
-    const computeWinner = (cells) => {
-      const lines = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6]
-      ];
+      // Вынос логики класса символа для переиспользования и упрощения тестов
+      const getSymbolClassName = (symbol) => {
+        if (symbol === SYMBOL_O) return "symbol--o";
+        if (symbol === SYMBOL_X) return "symbol--x";
+        return "";
+      };
 
-      for (let i = 0; i < lines.length; i++) {
-        const [a, b, c] = lines[i];
-        if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
-          return [a, b, c];
+      const GameSymbol = ({ symbol }) => (
+        <span className={`symbol ${getSymbolClassName(symbol)}`}>{symbol}</span>
+      );
+
+      const computeWinner = (cells) => {
+        const lines = [
+          [0, 1, 2],
+          [3, 4, 5],
+          [6, 7, 8],
+          [0, 3, 6],
+          [1, 4, 7],
+          [2, 5, 8],
+          [0, 4, 8],
+          [2, 4, 6],
+        ];
+
+        for (let [a, b, c] of lines) {
+          if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
+            return [a, b, c];
+          }
         }
+        return null;
+      };
+
+      function useGameState() {
+        const [cells, setCells] = React.useState(Array(9).fill(null));
+        const [currentStep, setCurrentStep] = React.useState(SYMBOL_O);
+
+        // Вычисление победителя на лету — оптимизировано useMemo — не пересчитывается без изменений
+        const winnerSequence = React.useMemo(
+          () => computeWinner(cells),
+          [cells]
+        );
+
+        const winnerSymbol = winnerSequence
+          ? cells[winnerSequence[0]]
+          : undefined;
+
+        // useMemo оправдан — может использоваться несколько раз
+        const isDraw = React.useMemo(() => {
+          return !winnerSequence && cells.every(Boolean);
+        }, [cells, winnerSequence]);
+
+        const handleCellClick = (index) => {
+          if (cells[index] || winnerSequence || isDraw) return;
+
+          setCells((prev) => {
+            const next = [...prev];
+            next[index] = currentStep;
+            return next;
+          });
+          setCurrentStep((prev) => (prev === SYMBOL_O ? SYMBOL_X : SYMBOL_O));
+        };
+
+        const handleResetClick = () => {
+          setCells(Array(9).fill(null));
+          setCurrentStep(SYMBOL_O);
+        };
+
+        return {
+          cells,
+          currentStep,
+          winnerSequence,
+          winnerSymbol,
+          handleCellClick,
+          handleResetClick,
+          isDraw,
+        };
       }
-      return null;
-    };
 
-    const getSymbolClassName = (symbol) => {
-      if (symbol === SYMBOL_O) return 'symbol--o';
-      if (symbol === SYMBOL_X) return 'symbol--x';
-      return '';
-    };
+      function App() {
+        const {
+          cells,
+          currentStep,
+          winnerSequence,
+          winnerSymbol,
+          handleCellClick,
+          handleResetClick,
+          isDraw,
+        } = useGameState();
 
-    const renderSymbol = (symbol) => (
-      <span className={`symbol ${getSymbolClassName(symbol)}`}>{symbol}</span>
-    );
-
-    function App() {
-      const [cells, setCells] = React.useState(Array(9).fill(null));
-      const [currentStep, setCurrentStep] = React.useState(SYMBOL_O);
-
-      const winnerSequence = React.useMemo(() => computeWinner(cells), [cells]);
-      const winnerSymbol = winnerSequence ? cells[winnerSequence[0]] : undefined;
-      const isDraw = !winnerSequence && cells.every(Boolean);
-
-      const mergeClassNames = (...classes) => classes.filter(Boolean).join(' ');
-
-      const cellClassName = (index) => {
-        const isWinner = winnerSequence?.includes(index);
-        return mergeClassNames('cell', isWinner && 'cell--win');
-      };
-
-      const handleCellClick = (index) => {
-        if (cells[index] || winnerSequence || isDraw) return;
-
-        setCells((prev) => {
-          const next = [...prev];
-          next[index] = currentStep;
-          return next;
-        });
-        setCurrentStep(prev => (prev === SYMBOL_O ? SYMBOL_X : SYMBOL_O));
-      };
-
-      const handleResetGame = () => {
-        setCells(Array(9).fill(null));
-        setCurrentStep(SYMBOL_O);
-      };
-
-      const renderStatus = () => {
-        if (winnerSequence) {
-          return <span>Победитель: {renderSymbol(winnerSymbol)}</span>;
-        } else if (isDraw) {
-          return <span className="draw">Ничья</span>;
-        } else {
-          return <span>Ход: {renderSymbol(currentStep)}</span>;
-        }
-      };
-
-      return (
-        <div className="game">
-          <div className="game-info">
-            {renderStatus()}
-          </div>
-          <div className="game-field">
-            {cells.map((symbol, index) => {
-              const isWinner = winnerSequence?.includes(index);
-              return (
-                <button
+        return (
+          <div className="game">
+            <GameInfo
+              isDraw={isDraw}
+              winnerSymbol={winnerSymbol}
+              currentStep={currentStep}
+            />
+            <div className="game-field">
+              {cells.map((symbol, index) => (
+                <GameCell
                   key={index}
-                  className={cellClassName(index)}
-                  disabled={!!symbol || !!winnerSequence || isDraw}
+                  symbol={symbol}
+                  isWinner={winnerSequence?.includes(index)}
+                  disabled={Boolean(symbol || winnerSequence || isDraw)}
                   onClick={() => handleCellClick(index)}
-                >
-                  {symbol ? renderSymbol(symbol) : null}
-                </button>
-              );
-            })}
-          </div>
-          <div className="game-reset">
-            <button onClick={handleResetGame}>
+                />
+              ))}
+            </div>
+            <button className="reset" onClick={handleResetClick}>
               Сбросить
             </button>
           </div>
-        </div>
-      );
-    }
+        );
+      }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
-  <style>
-    html {
-      font-family: Arial, Helvetica, sans-serif;
-    }
+      function GameInfo({ isDraw, winnerSymbol, currentStep }) {
+        if (isDraw) {
+          return <div className="game-info">Ничья</div>;
+        }
+        if (winnerSymbol) {
+          return (
+            <div className="game-info">
+              Победитель: <GameSymbol symbol={winnerSymbol} />
+            </div>
+          );
+        }
+        return (
+          <div className="game-info">
+            Ход: <GameSymbol symbol={currentStep} />
+          </div>
+        );
+      }
 
-    .game {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 150px;
-      margin: 100px auto;
-      padding: 20px;
-      border: 1px solid black;
-    }
+      function GameCell({ isWinner, onClick, symbol, disabled }) {
+        return (
+          <button
+            className={mergeClassNames("cell", isWinner && "cell--win")}
+            onClick={onClick}
+            disabled={disabled}
+          >
+            {symbol ? <GameSymbol symbol={symbol} /> : null}
+          </button>
+        );
+      }
 
-    .game-info {
-      margin-bottom: 10px;
-    }
-
-    .game-reset {
-      margin-top: 10px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .game-reset button {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      font-size: 12px;
-      padding: .25rem 1rem;
-      border-radius: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 14px;
-      color: #333;
-    }
-
-    .game-field {
-      display: grid;
-      grid-template-columns: repeat(3, 30px);
-      grid-template-rows: repeat(3, 30px);
-      padding: 1px 0 0 1px;
-    }
-
-    .cell {
-      border: 1px solid grey;
-      margin: -1px 0 0 -1px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: transparent;
-    }
-
-    .cell--win {
-      background: rgba(255, 0, 0, 0.1);
-    }
-
-    .symbol {
-      font-size: 20px;
-      line-height: 24px;
-    }
-
-    .symbol--x {
-      color: red;
-    }
-
-    .symbol--o {
-      color: green;
-    }
-
-    .draw {
-      line-height: 24px;
-    }
-  </style>
-</body>
-
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
 </html>
